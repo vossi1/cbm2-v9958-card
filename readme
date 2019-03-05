@@ -1,0 +1,10 @@
+cbm2-v9958-card
+
+cbm2 color-graphics-card for the LP and HP models with the Yamaha v9958 / v9938 with 128kB dram
+
+first pcb version 0.2
+
+known BUGs:
+- two missing address-traces to the eprom
+- usage of d1-8 and d9-16 of one 16bit-dram with lcas/ucas as cas0/1 banks is not possible - the v9958 does not like this!
+- write access does not work properly because the 6509 does a read access in cycle 5 of STA(ZP),Y just before the write access in cycle 6
