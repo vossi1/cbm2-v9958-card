@@ -1,0 +1,32 @@
+GAL16V8		; CBM2-v9958-Card
+CBM29958	; 64bit Signature max. 8 char. Text
+
+; v1.0 - Vossi, 1.2.2019 
+; CSR/CSW encoding, ROM CS decoding
+
+; $D900 - $D903 = write to v9958
+; $D904 - $D907 = read from v9958
+; ROM CS only at read
+
+; Pin definition
+;1]   [2]   [3]   [4]   [5]   [6]   [7]   [8]   [9]   [10]
+NC    NC    NC    SRW   CS1   DKROM BA2   BA1   BA0   GND
+
+;11]  [12]  [13]  [14]  [15]  [16]  [17]  [18]  [19]  [20]
+NC    NC    NC    NC    NC    NC    CEROM CSR   CSW   VCC
+
+; Equations
+/CEROM	= /DKROM *  SRW				; CEROM at DiskROMCS & read
+
+/CSR	= /CS1   *  BA2   *  SRW	; VDP read only with BA2 = 1
+
+/CSW	= /CS1   * /BA2   * /SRW	; VDP write only with BA2 = 0
+
+
+DESCRIPTION
+
+/    NOT or active-low
+*    AND
++    OR
+=    Combinational output
+:=   Registered output
