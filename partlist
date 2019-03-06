@@ -1,0 +1,25 @@
+cbm2-v9958-card
+version 1.0
+
+partlist:
+---------
+1x Yamaha V9958 or V9938
+2x dram 256kx16 soj-40 !!! e.g.: HYB514171bj, MT4C16257dj, KM416C254dj, uPD424260
+    speed doesn't matter, mostly a 'j' means soj-case !
+1x gal16v8
+1x eprom 2732
+1x socket sdip-64
+2x socket soj-40
+1x socket dip-20
+1x socket dip-24
+1x crystal 21,47727 MHz
+2x ceramic capacitor 22p
+5x ceramic capacitor 100n
+1 electrolytic capacitor 470u / 6,3V
+1 electrolytic capacitor 22u / 10V
+4x BC547c
+4x resistor 1k
+4x resistor 220
+(1x resistor 10k) only for V9938
+1x 5 pin female pinheader
+1x 60 pin female angled connector
