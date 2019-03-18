@@ -1,5 +1,5 @@
 ; *************************************************************************************************
-;               CBM2-V9958-Card Yamaha V9938-V9958 CBM2-Hello World! / Vossi 03/2019
+;                  CBM2-V9958-Card Yamaha V9938-V9958 CBM2-Test / Vossi 01/2019
 ; *************************************************************************************************
 ; basic copys init-code to bank 15 and starts at $0400
 !cpu 6502	; 6502, 6510, 65c02, 65816
@@ -11,8 +11,10 @@
 ; pass parameters to subroutine: AA = lowbyte, XX = highbyte / return AA or XXAA 
 
 ; switches
+DEBUG = 1		; selects DEBUG code
 PAL = 0			; PAL=1, NTSC=0		selects V9938/58 PAL RGB-output, NTSC has a higher picture
 LINES = 192		; lines = 192 / 212
+!source "macros_6502.b"
 ; ***************************************** CONSTANTS *********************************************
 FILL					= $00		; fills free memory areas with $00
 V_NULL					= $ff		; VDP string End
@@ -20,6 +22,8 @@ VDPREG1					= $00		; VDP reg 1 value (mode bits M1+M2, screen disabled)
 VDPREG18				= $0d		; VDP reg 18 value (V/H screen adjust, $0d = Sony PVM 9")
 !if LINES=192 {VDPREG9	= $00|PAL*2	; VDP reg 9 value ($00 = NTSC, $02 = PAL)
 	}else {VDPREG9		= $80|PAL*2}
+VDPTUNE					= 0			; tune vdp waits in 1us steps
+CLEARBANKS				= 1			; number of 16kB VRAM banks to clear
 COLS					= 32		; screen columns
 ROWS					= 24		; used lines
 ; ***************************************** ADDRESSES *********************************************
@@ -38,47 +42,56 @@ ZP = $33						; *** start zero page pointers
 !addr VDPControl		= ZP+$02
 !addr VDPPalette		= ZP+$04
 !addr VDPIndirect		= ZP+$06
+!addr VDPRamRead		= ZP+$08
+!addr VDPStatus			= ZP+$0a
 										; IO pointers
 VZP = $40						; *** start zero page VDP parameter
 !addr vdp_counter		= VZP			; 8bit universal counter
+!addr vdp_counter2		= VZP+$01		; 8bit universal counter
 !addr vdp_calc			= VZP+$02		; 8bit universal calc memory
+!addr vdp_bgcolor		= VZP+$03		; 8bit background color
+!addr vdp_color			= VZP+$04		; 8bit color
+!addr vdp_pointer		= VZP+$05		; 16bit universal pointer
+!addr vdp_pointer2		= VZP+$07		; 16bit universal pointer
 !addr vdp_data			= VZP+$09		; 16bit pointer to source data (bitmap or string)
 !addr vdp_size			= VZP+$0b		; 16bit size for VdpCopy + VdpCopy16
-
+!addr vdp_size_x		= VZP+$0d		; 16bit x size for VDP subroutines
+!addr vdp_size_y		= VZP+$0f		; 16bit y size for VDP sobroutines
+BZP = $c0						; *** start zero page byte-variables
+!addr vdpid				= BZP			; VDP ID
+!addr counter			= BZP+$01		; 8bit universal counter
+WZP = $d0						; *** start zero page word variables	
+!addr counter16			= WZP			; 16bit universal counter
+!addr pointer			= WZP+$02		; universal pointer
+;						= $f8-$fc		; reserved console source
+!addr debug_fd			= $fd;-$ff		; 3 byte debug register for A, X, Y			
 ; ******************************************* MACROS **********************************************
-!macro inc16 .a{			; *** increase 16bit
-	inc .a
-	bne .j
-	inc .a+1
-.j}
-!macro ldax16i .v{			; *** loads 16bit immediate to XXAA
-	lda # <.v
-	ldx # >.v
-}
-!macro st16i .a, .v{		; *** store 16bit immediate to address
-	lda # <.v
-	sta .a
-	lda # >.v
-	sta .a+1
+!ifdef DEBUG{
+!macro DEBUG{ jsr ConsoleDebug }
 }
 !macro VDPWAIT .t{			; *** t x 1 us wait for VRAM write
 	!do while .t > 0{
 		nop								; each nop needs 1 us @ 2MHz
 		!set .t = .t -1}
 }
-!macro VdpSetReg .r{		; *** set VDP Register
+!macro VdpSetReg .r{			; *** set VDP Register
 	ldy #$00
 	sta(VDPControl),y					; first writes data in A to control port #1
 	lda # .r | $80						; writes register no. with bit#7 = 1 to Port #1
 	sta(VDPControl),y
 }
 ; ********************* Y register must be $00 for all Vdp-Address subroutines ********************
-!macro VdpWriteAddress{		; *** set VDP write vram address-pointer to XXAA
+!macro VdpWriteAddress{			; *** set VDP write vram address-pointer to XXAA
 	sta(VDPControl),y
 	txa
 	ora # $40							; bit#6 = 1 write
 	sta(VDPControl),y
 } 
+!macro VdpReadAddress{					; *** set VDP read vram address-pointer to XXAA
+	sta(VDPControl),y
+	txa
+	sta(VDPControl),y
+}
 ; **************************************** BASIC LOADER *******************************************
 !initmem FILL
 *= $0003
@@ -111,16 +124,67 @@ end:							; *** terminate program and jump back to basic ***
 start:							; *** main code starts here ***	
 	lda #$0f							; set bank indirect reg to bank 15
 	sta IndirectBank
+	jsr ConsoleClear					; start console
 	jsr InitZeroPage					; initialize all zero page pointers
-	jsr VdpClear						; clear screen
+	+ldax16i message_start
+	jsr ConsoleText
+	+ldax16i message_copyright
+	jsr ConsoleText
+	lda # 1								; read status register 1
+	jsr VdpStatus
+	lsr
+	and #$1f							; isolate VDP identification bit #1-5
+	sta vdpid
+	bne +
+	+ldax16i message_v9938				; ID = 0 -> V9938
+	jsr ConsoleText
+	jmp ++
++	cmp #$02
+	bne +
+	+ldax16i message_v9958				; ID = 1 -> V9958
+	jsr ConsoleText
+	jmp ++
++	+ldax16i message_novdp				; no vdp detected
+	jsr ConsoleText
+++	+ldax16i message_clearvram
+	jsr ConsoleText
+	
+	jsr VdpInit						; VDP init - returns 16k VRAM banks detected
+	bne +
+	+ldax16i message_nomemory
+	jsr ConsoleText
+	jmp ++
++	asl
+	asl
+	jsr ConsoleByte
+	+ldax16i message_memory
+	jsr ConsoleText
+++	lda vdpid						; ready message only with id ID 0 or 2 
+	beq +
+	cmp #$02
+	bne ++
++	+ldax16i message_vdpready
+	jsr ConsoleText
+	jmp +
+++	+ldax16i message_vdpunknown
+	jsr ConsoleText
 
-	+st16i vdp_data, vdp_message		; string address
-	ldy # 0								; line in Y
-	ldx # 0								; column in X
++	jsr VdpClear					; clear screen
+
+	lda # 8							; set counter to start line
+	sta counter
+	+st16i vdp_data, vdp_message	; string address
+-	ldy counter						; line in Y
+	ldx # 1							; column in X
++DEBUG
 	jsr VdpText
+	inc counter
+	lda counter
+	cmp # 16						; last line reached
+	bne -
 
-+	jsr VdpOn							; switch display on
-	jmp end								; end program
++	jsr VdpOn						; switch display on
+	jmp end							; end program
 ; ************************************* ZONE SUBROUTINES ******************************************
 !zone subroutines
 InitZeroPage:					; *** init zero page addresses
@@ -129,6 +193,8 @@ InitZeroPage:					; *** init zero page addresses
 	sta VDPControl+1
 	sta VDPPalette+1
 	sta VDPIndirect+1
+	sta VDPRamRead+1
+	sta VDPStatus+1
 	ldx # <VDPAddress
 	stx VDPRamWrite
 	inx
@@ -137,6 +203,10 @@ InitZeroPage:					; *** init zero page addresses
 	stx VDPPalette
 	inx
 	stx VDPIndirect
+	inx
+	stx VDPRamRead
+	inx
+	stx VDPStatus
 	rts
 ; *********************************** ZONE VDP_SUBROUTINES ****************************************
 *= $0410
@@ -153,19 +223,50 @@ VdpInit:						; *** initialize VDP ***
 	bne -
 	lda # VDPREG18
 	+VdpSetReg 18						; set register 18 V/H display adjust L 7-1,0,f-8 R
-									; * clear 16kB VRAM
+									; * clear 128kB VRAM (with bank switching 0-7)
 	tya									; all regs $00
 	tax
 	+VdpWriteAddress			 		; set VRAM write address to $XXAA = $0000
-	lda #40								; set counter to clear $40 x $100 bytes
-	sta vdp_counter
-	tya									; VRAM init value = $00, X already $00
--	+VDPWAIT 3							; wait 3us - each 8us is a VRAM write allowed
+	+st16i counter16, $0000
+	ldx #00
+-	tya									; VRAM init value = $00, X already $00
 	sta(VDPRamWrite),y
-	inx
+	inc counter16
 	bne -
-	dec vdp_counter
-	bne -								; 16kB reached ?
+	inc counter16+1
+	lda counter16+1
+	cmp #40								; 16kB bank end reached ?
+	bne -
+	inx
+	cpx # CLEARBANKS					; last 16kB bank reached ?							
+	beq +
+	txa
+	+VdpSetReg 14						; set bank to X
+	jmp -
++	tya
+	tax
+	+VdpSetReg 14						; reset to bank 0
+
+	sty counter							; start test at bank 0
+-	lda counter
+	+VdpSetReg 14 						
+	inc counter
+	+VDPWAIT 4
+	tya
+	tax
+	+VdpReadAddress						; set VRAM adress to $0000
+	+VDPWAIT 6
+	lda(VDPRamRead),y
+	bne +								; cleared VRAM not $00 ?
+	lda counter
+	cmp #$08
+	beq ++
+	jmp -
++	dec counter
+++	lda counter
+	pha
+	tya									; switch back to VRAM bank 0
+	+VdpSetReg 14
 									; * copy font to pattern generator table
 	+st16i vdpcopy16_data, FontData
 	+st16i vdp_size, FontDataEnd - FontData
@@ -192,6 +293,18 @@ VdpInit:						; *** initialize VDP ***
 VdpOn:							; *** enable screen ***
 	lda # VDPREG1 | $40					; set mode reg 1 (M1+M2), bit#6 = 1 enables screen
 	+VdpSetReg 1
+	rts
+
+VdpOff:							; *** disable screen ***
+	lda # VDPREG1 & $bf					; set mode reg 1 (M1+M2), bit#6 = 1 enables screen
+	+VdpSetReg 1
+	rts
+
+VdpStatus:						; *** read status register in A - return status in A
+	lda # 1
+	+VdpSetReg 15						; reg 15 = 1 initiates read status-reg 1
+	+VDPWAIT 6						; wait for DVP
+	lda(VDPStatus),y					; read status
 	rts
 
 VdpCopy:						; *** copy vdp_size bytes from pointer to VRAM at $XXAA ***
@@ -226,14 +339,14 @@ VdpClear:
 	+ldax16i ScreenTable
 	+VdpWriteAddress			 		; set VRAM write address to $XXAA = $0000
 	lda # (>(27*COLS))+1				; 27 lines with 32 characters =$360 (+1 run for $60 in X)
-	sta vdp_counter
+	sta counter
 	ldx # <(27*COLS)
 	lda # ' '							; space
 -	sta(VDPRamWrite),y
-	+VDPWAIT 3
+	+VDPWAIT 3-VDPTUNE
 	dex
 	bne -
-	dec vdp_counter
+	dec counter
 	bne -
 	rts
 
@@ -264,9 +377,51 @@ VdpText:						; *** copy string vdp_data to VRAM at $XXAA ***
 	inc vdp_counter						; next character from string
 	bne -
 +	rts
+
+; ***************************************** ZONE DEBUG ********************************************
+!zone debug_subroutine
+!ifdef DEBUG{
+ConsoleDebug:							; optional debug code prints A, X, Y
+	php
+	sta debug_fd
+	stx debug_fd+1
+	sty debug_fd+2
+	+ldax16i string_debug_axy
+	jsr ConsoleText
+	lda debug_fd
+	jsr ConsoleByte
+	+ldax16i string_space
+	jsr ConsoleText
+	lda debug_fd+1
+	jsr ConsoleByte
+	+ldax16i string_space
+	jsr ConsoleText
+	lda debug_fd+2
+	jsr ConsoleByte
+	+ldax16i string_cr
+	jsr ConsoleText
+	lda debug_fd
+	ldx debug_fd+1
+	ldy debug_fd+2
+	plp
+	rts
+}
+; ********************************** ZONE CONSOLE_SUBROUTINES *************************************
+!zone console_subroutines
+!source "console.b"
 ; ****************************************** ZONE DATA ********************************************
 !zone data
-vdp_message !scr "Hello World!", V_NULL
+message_start !scr "Commodore-CBM2 with V9958 Hires-Color-Card!", C_CR, C_NULL
+message_copyright !scr "Design (c) Vossi 01/2019 in Hamburg/Germany", C_CR, C_CR, C_NULL
+message_clearvram !scr "Initializing VDP and clearing VRAM... ", C_CR, C_NULL
+message_memory !scr "000 kB graphics memory detected", C_CR, C_NULL
+message_nomemory !scr "No graphics memory detected!", C_CR, C_NULL
+message_v9938 !scr "V9938 detected", C_CR, C_NULL
+message_v9958 !scr "V9958 detected", C_CR, C_NULL
+message_novdp !scr "No VDP detected! -> trying to initialize:", C_CR, C_NULL
+message_vdpready !scr "VDP ready.", C_CR, C_NULL
+message_vdpunknown !scr "VDP ?", C_CR, C_NULL
+vdp_message !scr "CBM2 V9958-card (c) vossi 2019", V_NULL
 
 VdpInitData:	; graphics1-mode
 !byte $00,VDPREG1,$06,$80,$00,$36,$07,$00,$08,VDPREG9,$00,$00,$10,$f0,$00
@@ -294,104 +449,14 @@ PaletteData:
 	!byte $70,$03,$60,$02,$72,$03,$11,$01	;	8=orange	9=brown		a=lightred	b=darkgrey
 	!byte $33,$03,$54,$07,$27,$04,$55,$05	;	c=grey		d=litegreen	e=lightblue	f=lightgrey
 PaletteDataEnd:
-; ***** color data for tiles: each byte = color/background for a group of 8 tiles *****
+
 ColorData:
-	!byte $16,$16,$16,$16,$16,$16,$16,$16	; text = white, background = blue
-	!byte $16,$16,$16,$16,$16,$16,$16,$16
-	!byte $16,$16,$16,$16,$16,$16,$16,$16
-	!byte $16,$16,$16,$16,$16,$16,$16,$16
+	!byte $1b,$1b,$1b,$1b,$7b,$eb,$2b,$2b	; each byte = color/background for a group of 8 tiles
+	!byte $6b,$6b,$2b,$2b,$1b,$1b,$1b,$1b
+	!byte $1b,$1b,$1b,$1b,$1b,$1b,$1b,$1b
+	!byte $1b,$1b,$1b,$1b,$1b,$1b,$1b,$1b
 ColorDataEnd:
-; ***** CBM2 8x8 font - characters 0-90 only *****
+
 FontData:
-	!byte $1c, $22, $4a, $56, $4c, $20, $1e, $00
-	!byte $00, $00, $38, $04, $3c, $44, $3a, $00
-	!byte $40, $40, $5c, $62, $42, $62, $5c, $00
-	!byte $00, $00, $3c, $42, $40, $42, $3c, $00
-	!byte $02, $02, $3a, $46, $42, $46, $3a, $00
-	!byte $00, $00, $3c, $42, $7e, $40, $3c, $00
-	!byte $0c, $12, $10, $7c, $10, $10, $10, $00
-	!byte $00, $00, $3a, $46, $46, $3a, $02, $3c
-	!byte $40, $40, $5c, $62, $42, $42, $42, $00
-	!byte $08, $00, $18, $08, $08, $08, $1c, $00
-	!byte $04, $00, $0c, $04, $04, $04, $44, $38
-	!byte $40, $40, $44, $48, $50, $68, $44, $00
-	!byte $18, $08, $08, $08, $08, $08, $1c, $00
-	!byte $00, $00, $76, $49, $49, $49, $49, $00
-	!byte $00, $00, $5c, $62, $42, $42, $42, $00
-	!byte $00, $00, $3c, $42, $42, $42, $3c, $00
-	!byte $00, $00, $5c, $62, $62, $5c, $40, $40
-	!byte $00, $00, $3a, $46, $46, $3a, $02, $02
-	!byte $00, $00, $5c, $62, $40, $40, $40, $00
-	!byte $00, $00, $3e, $40, $3c, $02, $7c, $00
-	!byte $10, $10, $7c, $10, $10, $12, $0c, $00
-	!byte $00, $00, $42, $42, $42, $46, $3a, $00
-	!byte $00, $00, $42, $42, $42, $24, $18, $00
-	!byte $00, $00, $41, $49, $49, $49, $36, $00
-	!byte $00, $00, $42, $24, $18, $24, $42, $00
-	!byte $00, $00, $42, $42, $46, $3a, $02, $3c
-	!byte $00, $00, $7e, $04, $18, $20, $7e, $00
-	!byte $3c, $20, $20, $20, $20, $20, $3c, $00
-	!byte $1c, $22, $20, $f8, $20, $40, $fe, $00
-	!byte $3c, $04, $04, $04, $04, $04, $3c, $00
-	!byte $00, $08, $1c, $2a, $08, $08, $08, $00
-	!byte $00, $00, $10, $20, $7f, $20, $10, $00
-	!byte $00, $00, $00, $00, $00, $00, $00, $00
-	!byte $08, $08, $08, $08, $00, $00, $08, $00
-	!byte $24, $24, $24, $00, $00, $00, $00, $00
-	!byte $24, $24, $7e, $24, $7e, $24, $24, $00
-	!byte $08, $1e, $28, $1c, $0a, $3c, $08, $00
-	!byte $00, $62, $64, $08, $10, $26, $46, $00
-	!byte $30, $48, $48, $30, $4a, $44, $3a, $00
-	!byte $04, $08, $10, $00, $00, $00, $00, $00
-	!byte $04, $08, $10, $10, $10, $08, $04, $00
-	!byte $20, $10, $08, $08, $08, $10, $20, $00
-	!byte $08, $2a, $1c, $3e, $1c, $2a, $08, $00
-	!byte $00, $08, $08, $3e, $08, $08, $00, $00
-	!byte $00, $00, $00, $00, $08, $08, $10, $00
-	!byte $00, $00, $00, $7e, $00, $00, $00, $00
-	!byte $00, $00, $00, $00, $00, $18, $18, $00
-	!byte $00, $02, $04, $08, $10, $20, $40, $00
-	!byte $3c, $42, $46, $5a, $62, $42, $3c, $00
-	!byte $08, $18, $28, $08, $08, $08, $3e, $00
-	!byte $3c, $42, $02, $0c, $30, $40, $7e, $00
-	!byte $3c, $42, $02, $1c, $02, $42, $3c, $00
-	!byte $04, $0c, $14, $24, $7e, $04, $04, $00
-	!byte $7e, $40, $78, $04, $02, $44, $38, $00
-	!byte $1c, $20, $40, $7c, $42, $42, $3c, $00
-	!byte $7e, $42, $04, $08, $10, $10, $10, $00
-	!byte $3c, $42, $42, $3c, $42, $42, $3c, $00
-	!byte $3c, $42, $42, $3e, $02, $04, $38, $00
-	!byte $00, $00, $08, $00, $00, $08, $00, $00
-	!byte $00, $00, $08, $00, $08, $08, $10, $00
-	!byte $0e, $18, $30, $60, $30, $18, $0e, $00
-	!byte $00, $00, $7e, $00, $7e, $00, $00, $00
-	!byte $70, $18, $0c, $06, $0c, $18, $70, $00
-	!byte $3c, $42, $02, $0c, $10, $00, $10, $00
-	!byte $00, $00, $00, $00, $ff, $00, $00, $00
-	!byte $18, $24, $42, $7e, $42, $42, $42, $00
-	!byte $7c, $22, $22, $3c, $22, $22, $7c, $00
-	!byte $1c, $22, $40, $40, $40, $22, $1c, $00
-	!byte $78, $24, $22, $22, $22, $24, $78, $00
-	!byte $7e, $40, $40, $78, $40, $40, $7e, $00
-	!byte $7e, $40, $40, $78, $40, $40, $40, $00
-	!byte $1c, $22, $40, $4e, $42, $22, $1c, $00
-	!byte $42, $42, $42, $7e, $42, $42, $42, $00
-	!byte $1c, $08, $08, $08, $08, $08, $1c, $00
-	!byte $0e, $04, $04, $04, $04, $44, $38, $00
-	!byte $42, $44, $48, $70, $48, $44, $42, $00
-	!byte $40, $40, $40, $40, $40, $40, $7e, $00
-	!byte $42, $66, $5a, $5a, $42, $42, $42, $00
-	!byte $42, $62, $52, $4a, $46, $42, $42, $00
-	!byte $18, $24, $42, $42, $42, $24, $18, $00
-	!byte $7c, $42, $42, $7c, $40, $40, $40, $00
-	!byte $18, $24, $42, $42, $4a, $24, $1a, $00
-	!byte $7c, $42, $42, $7c, $48, $44, $42, $00
-	!byte $3c, $42, $40, $3c, $02, $42, $3c, $00
-	!byte $3e, $08, $08, $08, $08, $08, $08, $00
-	!byte $42, $42, $42, $42, $42, $42, $3c, $00
-	!byte $42, $42, $42, $24, $24, $18, $18, $00
-	!byte $42, $42, $42, $5a, $5a, $66, $42, $00
-	!byte $42, $42, $24, $18, $24, $42, $42, $00
-	!byte $22, $22, $22, $1c, $08, $08, $08, $00
-	!byte $7e, $02, $04, $18, $20, $40, $7e, $00
+	!binary "cbm2-8x8.fon"
 FontDataEnd:
