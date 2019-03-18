@@ -44,7 +44,7 @@ kernal:
     Most cbm2-software uses the kernal routines to print, because of the memory management.
     But "Space Chase" does not work - it write directly into the screen memory!
 
-test-sources: helloworld.b / test14.b
+examples: helloworld.b / test14.b
     My assembly-sources for the cbm2-series have the ".b" extension!
     Use the great ACME assembler to assemble the files. It is available for OSX, linux and wondows.
     Helloworld is small "one file" testcode for the card. It uses some 6502 and vdp macros.
