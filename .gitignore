@@ -1,0 +1,6 @@
+*.DS_Store
+*.prg
+*.d82
+*.d80
+/eagle/*
+/doc/raw/*
