@@ -24,26 +24,27 @@ cbm2 color-graphics-card for the LP and HP models with the Yamaha V9958 (V9938) 
     The V9958 has some additional features compared to the V9938 like vertical soft scrolling
     and some 19k color modes.
 
-    The VDP has a RGB output programmable for PAL or NTSC. You need an analog RGB monitor like the
-    1084 or a scart TV. The V9958-card has 128kB dedicated RAM - only reachable through the VDP-ports.
-    It has screen resolutions from 256x192 up to 512x212 / 512x424i and 16/256/19k colors with
-    32 sprites, soft scrolling and hardware commands like: fill, line, copy. Screen modes up to 5
-    need only 64kB vram, mode 6 and 7 need 128kB ram, because of faster bank interleave access.
+    The VDP has a RGB output programmable for PAL or NTSC. You need an analog RGB monitor
+    like the 1084 or a scart TV. The V9958-card has 128kB dedicated RAM - only reachable
+    through the VDP-ports. It has screen resolutions from 256x192 up to 512x212 / 512x424i
+    and 16/256/19k colors with 32 sprites, soft scrolling and hardware commands like: fill,
+    line, copy. Screen modes up to 5 need only 64kB vram, mode 6 and 7 need 128kB ram,
+    because of faster bank interleave access.
 
 ![V9958-card photo](https://github.com/vossi1/cbm2-v9958-card/blob/master/pictures/card10-front.jpg)
 
 **details:**
 
     I placed the V9958 at $D900 (not used disk rom i/o), so the write-ports are $D900-$D903.
-    I had some trouble because the 6509 does a read access in cycle 5 of the STA(ZP),Y instruction
-    before it writes. This increased sometimes the address pointer of the VDP.
+    I had some trouble because the 6509 does a read access in cycle 5 of the STA(ZP),Y
+    instruction before it writes. This increased sometimes the address pointer of the VDP.
     Thats why I splittet the read and write access ports. The read access ports are $D904-$D905.
-    The programmable logic chip (GAL) does the splitting and outputs the CSR/CSW signals for the VDP.
-    I also added a 4kB 2732 eprom in the not used disk-rom area $1000-$1FFF. The upper half of this
-    eprom holds the two cbm2 font sets (2x 128 chars non reverse). The reverse characters will be
-    created in the font-copy routine of my modified color-kernal.
+    The programmable logic chip (GAL) does the splitting and outputs the CSR/CSW signals
+    for the VDP. I also added a 4kB 2732 eprom in the not used disk-rom area $1000-$1FFF.
+    The upper half of this eprom holds the two cbm2 font sets (2x 128 chars non reverse).
+    The reverse characters will be created in the font-copy routine of my modified color-kernal.
     I converted the complete cbm2-font to 6x8 matrix because the VDP has only 512 pixels width.
-    The lower half of the eprom is unused till now. I'm currently coding a nice intro for that ;)
+    The lower half of the eprom is unused till now. I aslo have a nice intro for that ;)
     If you only need the fonts, you can use a 2716 or 2816.
 
 ![V9958-card back photo](https://github.com/vossi1/cbm2-v9958-card/blob/master/pictures/card10-back.jpg)
