@@ -1,6 +1,6 @@
 # cbm2-v9958-card
 
-**Copyright (c) 2024 Vossi - v.3**
+**Copyright (c) 2019 Vossi - v 1.0**
 
 **www.mos6502.net**
 
@@ -11,29 +11,36 @@ International License. See [https://creativecommons.org/licenses/by-sa/4.0/](htt
 :thumbsup: final pcb version 1.0
 cbm2 color-graphics-card for the LP and HP models with the Yamaha V9958 (V9938) VDP and 128kB dedicated video ram.
 
-**[Schematic](https://github.com/vossi1/cbm2-v9958-card/blob/master/schematics.png)**
+**[Schematic](https://github.com/vossi1/cbm2-v9958-card/blob/master/doc/Schematics.png)**
 
-**[Parts](https://github.com/vossi1/cbm2-v9958-card/blob/master/doc/partlist.txt)**
+**[Parts](https://github.com/vossi1/cbm2-v9958-card/blob/master/doc/partlist)**
 
 **description:**
 
-    This is a color-graphics-card that plugs in one of the two 60 pin expansion connectors of a cbm2-machine.
-    It is based on the Yamaha MSX2+ video display processor (VDP) V9958 (MSX2: V9938).
+    This is a color-graphics-card that plugs in one of the two 60 pin expansion connectors of a
+    cbm2-machine. It is based on the Yamaha MSX2+ video display processor (VDP) V9958 (MSX2: V9938).
     Both VDP's are backward compatible to the TMS9918/9928 used in many old home computers/consoles.
-    The V9958 has some additional features compared to the V9938 like vertical soft scrolling and some 19k color modes.
+    The V9958 has some additional features compared to the V9938 like vertical soft scrolling and
+    some 19k color modes.
 
-    The VDP has a RGB output programmable for PAL or NTSC. You need an analog RGB monitor like the 1084 or a scart TV.
-    The V9958-card has 128kB dedicated RAM - only reachable through the VDP-ports.
-    It has screen resolutions from 256x192 up to 512x212 / 512x424i and 16/256/19k colors with 32 sprites, soft scrolling and hardware commands like: fill, line, copy.
-    Screen modes up to 5 need only 64kB vram, mode 6 and 7 need 128kB ram, because of faster bank interleave access.
+    The VDP has a RGB output programmable for PAL or NTSC. You need an analog RGB monitor like the
+    1084 or a scart TV. The V9958-card has 128kB dedicated RAM - only reachable through the VDP-ports.
+    It has screen resolutions from 256x192 up to 512x212 / 512x424i and 16/256/19k colors with
+    32 sprites, soft scrolling and hardware commands like: fill, line, copy. Screen modes up to 5
+    need only 64kB vram, mode 6 and 7 need 128kB ram, because of faster bank interleave access.
 
 ![V9958-card photo](https://github.com/vossi1/cbm2-v9958-card/blob/master/pictures/card10-front.jpg)
 
 **details:**
 
-    I placed the V9958 at $D900 (not used disk rom i/o), so the write-ports are $D900-$D903. I had some trouble because the 6509 does a read access in cycle 5 of the STA(ZP),Y instruction before it writes. This increased sometimes the address pointer of the VDP.
-    Thats why I splittet the read and write access ports. The read access ports are $D904-$D905. The programmable logic chip (GAL) does the splitting and outputs the CSR/CSW signals for the VDP.
-    I also added a 4kB 2732 eprom in the not used disk-rom area $1000-$1FFF. The upper half of this eprom holds the two cbm2 font sets (2x 128 chars non reverse). The reverse characters will be created in the font-copy routine of my modified color-kernal.
+    I placed the V9958 at $D900 (not used disk rom i/o), so the write-ports are $D900-$D903.
+    I had some trouble because the 6509 does a read access in cycle 5 of the STA(ZP),Y instruction
+    before it writes. This increased sometimes the address pointer of the VDP.
+    Thats why I splittet the read and write access ports. The read access ports are $D904-$D905.
+    The programmable logic chip (GAL) does the splitting and outputs the CSR/CSW signals for the VDP.
+    I also added a 4kB 2732 eprom in the not used disk-rom area $1000-$1FFF. The upper half of this
+    eprom holds the two cbm2 font sets (2x 128 chars non reverse). The reverse characters will be
+    created in the font-copy routine of my modified color-kernal.
     I converted the complete cbm2-font to 6x8 matrix because the VDP has only 512 pixels width.
     The lower half of the eprom is unused till now. I'm currently coding a nice intro for that ;)
     If you only need the fonts, you can use a 2716 or 2816.
@@ -43,9 +50,11 @@ cbm2 color-graphics-card for the LP and HP models with the Yamaha V9958 (V9938) 
 **assembling hints:**
 
     You can solder the rams directly to the board, but I prefer soj-sockets. These sockets are SMD !
-    I carefully cut out the bottom of the sockets and solder  the sockets with a small 0,4mm tip from the inside.
-    After that you should measure all socket connections from socket to socket. All used pins are parallel connected except lcas.
-    After doublechecking insert the bootom-plates with a little bit glue in the middle of the sockets - so the rams have the right heigh!!!
+    I carefully cut out the bottom of the sockets and solder  the sockets with a small 0,4mm tip
+    from the inside.
+    After that you should measure all socket connections from socket to socket. All used pins are
+    parallel connected except lcas. After doublechecking insert the bootom-plates with a little bit
+    glue in the middle of the sockets - so the rams have the right heigh!!!
     You should plug the drams and not pull them, if not nessesary, because the sockets are very sensitive!
     If you need to pull a dram, do it very carefully with a PLCC-extractor to not damage the socket.
 
@@ -53,7 +62,8 @@ cbm2 color-graphics-card for the LP and HP models with the Yamaha V9958 (V9938) 
 
     For mode 6 and 7 it needs 128kB because it uses bank interleave access to get the nessesary speed!
     The card uses one dram for bank0 and one for bank 1.
-    I tried everything to use only one chip - but without success. I tried to use the lower byte for cas0 and the upper byte for cas1.
+    I tried everything to use only one chip - but without success. I tried to use the lower byte for
+    cas0 and the upper byte for cas1.
     I also tried to use cas0/1 to switch an address line to use 128kB in one chip - no success.
     So I decided to use two common drams - easy to find in china or on old 1 or 2MB pc-vga-cards.
 
