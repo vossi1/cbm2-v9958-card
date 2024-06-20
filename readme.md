@@ -17,11 +17,12 @@ cbm2 color-graphics-card for the LP and HP models with the Yamaha V9958 (V9938) 
 
 **description:**
 
-    This is a color-graphics-card that plugs in one of the two 60 pin expansion connectors of a
-    cbm2-machine. It is based on the Yamaha MSX2+ video display processor (VDP) V9958 (MSX2: V9938).
-    Both VDP's are backward compatible to the TMS9918/9928 used in many old home computers/consoles.
-    The V9958 has some additional features compared to the V9938 like vertical soft scrolling and
-    some 19k color modes.
+    This is a color-graphics-card that plugs in one of the two 60 pin expansion connectors
+    of a cbm2-machine.
+    It is based on the Yamaha MSX2+ video display processor (VDP) V9958 (MSX2: V9938).
+    Both VDP's are backward compatible to the TMS9918/9928 used in many old home computers.
+    The V9958 has some additional features compared to the V9938 like vertical soft scrolling
+    and some 19k color modes.
 
     The VDP has a RGB output programmable for PAL or NTSC. You need an analog RGB monitor like the
     1084 or a scart TV. The V9958-card has 128kB dedicated RAM - only reachable through the VDP-ports.
