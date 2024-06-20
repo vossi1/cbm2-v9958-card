@@ -52,13 +52,13 @@ cbm2 color-graphics-card for the LP and HP models with the Yamaha V9958 (V9938) 
 **assembling hints:**
 
     You can solder the rams directly to the board, but I prefer soj-sockets. These sockets
-    are SMD ! I carefully cut out the bottom of the sockets and solder the sockets with a small
-    0,4mm tip from the inside.
-    After that you should measure all socket connections from socket to socket. All used pins are
-    parallel connected except lcas. After doublechecking insert the bootom-plates with a little
-    bit glue in the middle of the sockets - so the rams have the right heigh!!!
-    You should plug the drams and not pull them, if not nessesary, because the sockets are very
-    sensitive!
+    are SMD ! I carefully cut out the bottom of the sockets and solder the sockets with a
+    small 0,4mm tip from the inside.
+    After that you should measure all socket connections from socket to socket. All used pins
+    are parallel connected except lcas. After doublechecking insert the bootom-plates with a
+    little bit glue in the middle of the sockets - so the rams have the right heigh!!!
+    You should plug the drams and not pull them, if not nessesary, because the sockets are
+    very sensitive!
     If you need to pull a dram, do it carefully with a PLCC-extractor to not damage the socket.
 
 **comments:**
@@ -68,8 +68,9 @@ cbm2 color-graphics-card for the LP and HP models with the Yamaha V9958 (V9938) 
     I tried everything to use only one chip - but without success. I tried to use the lower
     byte for cas0 and the upper byte for cas1.
     I also tried to use cas0/1 to switch an address line to use 128kB in one chip - no success.
-    So I decided to use two common drams - easy to find in china or on old 1 or 2MB pc-vga-cards.
+    So I decided to use two common drams - easy to find in china or on old 1/2 MB pc-vga-cards.
 
+My Prototypy:
 ![V9958-card prototype](https://github.com/vossi1/cbm2-v9958-card/blob/master/pictures/prototype.jpg)
 
 **kernal:**
