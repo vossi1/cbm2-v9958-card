@@ -90,14 +90,16 @@ My Prototypy:
     Test14 is a bigger test - also in graphics mode 1.
     The 6502 macros, console subroutines and the cbm2-font are in external files.
 
+![V9958-basic-demo](https://github.com/vossi1/cbm2-v9958-card/blob/master/pictures/basic-demo.jpg)
+
 **basic cartridge / vdemo**
 
     The binary is for an 8KB eprom at $6000 on a cartridge module.
     It adds many great new statements to Basic128 or Basic256.
     All new graphics commands are shown in txt file.
     My extension only use mode 7 with 256x212 pixel, 256 fixed colors, 32 16x16 sprites!
-    PAL/NTSC is selectable with the MODE command. CLEAR, LINE, FRAME, BLOCK, VCOPY statements and
-    the scrolling subroutine use the very fast internal V9958 commands.
+    PAL/NTSC is selectable with the MODE command. CLEAR, LINE, FRAME, BLOCK, VCOPY statements
+    and the scrolling subroutine use the very fast internal V9958 commands.
     The upper left corner is 0,0 because the sprites also use these orientation.
     RAM are in bank 15 $600-$7FF is used for buffering sprite colors for each of the 64 pattern!
     The V9958 stores the sprite colorlines for each sprite and not for each pattern - But my
