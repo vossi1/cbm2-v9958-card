@@ -106,6 +106,8 @@ My Prototypy:
     extension does that ;) If you select one of the 64 pattern for a sprite, SPRITE also copies
     the colorlines from my buffer to the colortable for this specific sprite.
     It's also possible to override the color with SCOLOR temporary - but only unicolor.
+    You can convert 24 bit RGB BMP-pictures with up to 256x212 (only even x values) to 8bit RGB
+    for the IMAGE command with my BMP2RGB8 tool here on git.
     The Basic program vdemo.prg shows how to use the new statements.
     In the tiny draw-tool vplot.prg yue also see use of the new TEST-function.
 
