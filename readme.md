@@ -90,6 +90,25 @@ My Prototypy:
     Test14 is a bigger test - also in graphics mode 1.
     The 6502 macros, console subroutines and the cbm2-font are in external files.
 
+**basic cartridge / vdemo**
+
+    The binary is for an 8KB eprom at $6000 on a cartridge module.
+    It adds many great new statements to Basic128 or Basic256.
+    All new graphics commands are shown in txt file.
+    My extension only use mode 7 with 256x212 pixel, 256 fixed colors, 32 16x16 sprites!
+    PAL/NTSC is selectable with the MODE command. CLEAR, LINE, FRAME, BLOCK, VCOPY statements and
+    the scrolling subroutine use the very fast internal V9958 commands.
+    The upper left corner is 0,0 because the sprites also use these orientation.
+    RAM are in bank 15 $600-$7FF is used for buffering sprite colors for each of the 64 pattern!
+    The V9958 stores the sprite colorlines for each sprite and not for each pattern - But my
+    extension does that ;) If you select one of the 64 pattern for a sprite, SPRITE also copies
+    the colorlines from my buffer to the colortable for this specific sprite.
+    It's also possible to override the color with SCOLOR temporary - but only unicolor.
+    The Basic program vdemo.prg shows how to use the new statements.
+    In the tiny draw-tool vplot.prg yue also see use of the new TEST-function.
+
+    If you find a bug or have a question? -> leave me a note...
+
 **version 1.0 changes:**
 
 - fixed two missing eprom traces
