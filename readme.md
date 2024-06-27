@@ -18,7 +18,7 @@ cbm2 color-graphics-card for the LP and HP models with the Yamaha V9958 (V9938) 
 **description:**
 
     This is a color-graphics-card that plugs in one of the two 60 pin expansion connectors
-    of a cbm2-machine.
+    of a cbm2-machine (B128, B256, 6xx, 7xx, P500).
     It is based on the Yamaha MSX2+ video display processor (VDP) V9958 (MSX2: V9938).
     Both VDP's are backward compatible to the TMS9918/9928 used in many old home computers.
     The V9958 has some additional features compared to the V9938 like vertical soft scrolling
@@ -96,8 +96,8 @@ BASIC:
 **basic cartridge / vdemo**
 
     The binary is for an 8KB eprom at $6000 on a cartridge module.
-    It adds many great new statements to Basic128 or Basic256.
-    All new graphics commands are shown in txt file.
+    This cartridge runs only with Basic128/256 3a=4a. There is also an P500 image.
+    It adds many great new statements. All new graphics commands are shown in txt file.
     My extension only use mode 7 with 256x212 pixel, 256 fixed colors, 32 16x16 sprites!
     PAL/NTSC is selectable with the MODE command. CLEAR, LINE, FRAME, BLOCK, VCOPY statements
     and the scrolling subroutine use the very fast internal V9958 commands.
