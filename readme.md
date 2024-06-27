@@ -1,7 +1,7 @@
 # cbm2-v9958-card
 
 **Copyright (c) 2019 Vossi - v 1.0**
-
+**Basic-Cartridge (c) 2024 Vossi**
 **www.mos6502.net**
 
 ## License
