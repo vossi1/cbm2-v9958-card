@@ -61,6 +61,18 @@ cbm2 color-graphics-card for the LP and HP models with the Yamaha V9958 (V9938) 
     very sensitive!
     If you need to pull a dram, do it carefully with a PLCC-extractor to not damage the socket.
 
+**RGB output:**
+
+    The V9958 RGBS outputs are amplified with emitter followers, as specified by Yamaha.
+    They have 1Vpp output level - which gives a nice bright picture with good colors.
+    Standard monitor inputs have 0.7Vpp +-6dB inputs - which corresponds to 1.4V max - often
+    this is limited by two 0.7V diodes in the monitor. If the RGB signals are too high for a 
+    specific monitor, you can install 68 Ohm resistors in the RGBS lines.
+    I recommend decoupling the RGBS outputs with an electrolytic capacitor of 220 - 470uF/6.3V.
+    This can be done on your RGB output socket of the computer or in the Scart/SubD connector.
+    However, with the Philips VG8235 I have also found a computer where no electrolytic caps
+    are installed.
+
 **comments:**
 
     For mode 6 and 7 it needs 128kB because it uses bank interleave access to get the speed!
