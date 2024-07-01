@@ -110,7 +110,8 @@ BASIC:
     The binary is for an 8KB eprom at $6000 on a cartridge module.
     This cartridge runs only with Basic128/256 3a=4a. There is also an P500 image.
     It adds many great new statements. All new graphics commands are shown in txt file.
-    My extension only use mode 7 with 256x212 pixel, 256 fixed colors, 32 16x16 sprites!
+    My extension supports mode 6 with 256x212 pixel, 256 fixed colors and mode 7 with 512x212
+    pixel and 16 palette colors out of 512. Both modes have 32 sprites with 16x16 size!
     PAL/NTSC is selectable with the MODE command. CLEAR, LINE, FRAME, BLOCK, VCOPY statements
     and the scrolling subroutine use the very fast internal V9958 commands.
     The upper left corner is 0,0 because the sprites also use these orientation.
